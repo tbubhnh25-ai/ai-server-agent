@@ -1,30 +1,27 @@
 # סוכן AI אוטונומי לשרת — שלד פרויקט
 
-מערכת חינמית לחלוטין: מודל שפה מקומי (Ollama), חיפוש חינמי (DuckDuckGo), והרצת פקודות בתוך קונטיינר Docker מבודד (sandbox).
+מערכת שרץ על שירות אחד (למשל Render), עם מודל שפה חינמי מרוחק (Groq או Gemini) וחיפוש חינמי (DuckDuckGo).
 
-## הרצה
+## הרצה מקומית
 
-1. התקנת Docker ו-Docker Compose.
-2. העתקת `.env.example` ל-`.env` והגדרת `AGENT_AUTH_TOKEN`.
-3. בניית תמונת ה-sandbox:
+1. העתקת `.env.example` ל-`.env`, הגדרת `AGENT_AUTH_TOKEN` ו-`LLM_API_KEY` (מפתח חינמי מ-[console.groq.com/keys](https://console.groq.com/keys) או [aistudio.google.com/apikey](https://aistudio.google.com/apikey)).
+2. הרמת המערכת:
    ```bash
-   docker build -t agent-sandbox:latest ./sandbox_image
+   docker-compose up -d --build
    ```
-4. הרמת המערכת:
-   ```bash
-   docker-compose up -d
-   ```
-5. הורדת מודל חינמי ל-Ollama (פעם אחת):
-   ```bash
-   docker exec -it $(docker ps -qf name=ollama) ollama pull llama3.1
-   ```
-6. שליחת משימה:
+3. שליחת משימה:
    ```bash
    curl -X POST http://localhost:8000/task \
      -H "Authorization: Bearer <AGENT_AUTH_TOKEN>" \
      -H "Content-Type: application/json" \
      -d '{"goal": "בדוק מה גרסת פייתון מותקנת על השרת"}'
    ```
+
+## פריסה ל-Render
+
+1. חיבור הריפו הזה לשירות Web Service חדש ב-Render (Render מזהה את ה-`Dockerfile` אוטומטית).
+2. הגדרת משתני הסביבה מ-`.env.example` בלשונית Environment של השירות (`AGENT_AUTH_TOKEN`, `LLM_PROVIDER`, `LLM_MODEL`, `LLM_API_KEY`).
+3. Deploy. Render מזריק את `PORT` בעצמו — אין צורך להגדיר אותו.
 
 ## מבנה הפרויקט
 
@@ -33,20 +30,20 @@ app/
   main.py            נקודת כניסה ל-FastAPI
   config.py          הגדרות סביבה
   auth.py            אימות טוקן
-  llm_provider.py    הפשטת ספק מודל (ollama/groq)
+  llm_provider.py    הפשטת ספק מודל (groq/gemini)
   orchestrator.py     לולאת הסוכן (Plan -> Act -> Observe)
   models.py          מבני נתונים
   tools/             הכלים שהסוכן יכול להפעיל
-  sandbox/           הרצת פקודות בתוך קונטיינר מבודד
-sandbox_image/       תמונת ה-Docker שבתוכה רצות הפקודות של הסוכן
+  sandbox/           הרצת פקודות shell מוגבלת-זמן/זיכרון
 workspace/           תיקיית העבודה המשותפת
 ```
 
 ## הערות אבטחה
 
-- כל פקודת shell רצה בתוך קונטיינר נפרד, לא-root, עם הגבלת CPU/זיכרון/זמן.
-- רשימת תבניות פקודה חסומות ב-`app/sandbox/docker_runner.py`.
+- `shell_exec` רץ כתהליך-בן מוגבל בזמן/זיכרון/מספר תהליכים, בתוך תיקיית ה-workspace בלבד — **בתוך הקונטיינר של השירות עצמו**, לא בקונטיינר sandbox נפרד. זה מספיק לפריסה על שירות יחיד כמו Render, אבל נותן בידוד חלש יותר מהרצה עם Docker-in-Docker.
+- רשימת תבניות פקודה חסומות ב-`app/sandbox/subprocess_runner.py`.
 - `http_fetch` חוסם כתובות פנימיות/פרטיות (הגנת SSRF).
-- יש להרחיב בהמשך: לוג ביקורת מלא, אישור ידני לפעולות הרסניות, הרשאות Docker socket מוגבלות יותר (למשל Docker-in-Docker עם rootless).
+- `package_install` מוגבל ל-`pip`/`npm` בלבד (לא `apt-get`, שדורש הרשאות root שאין לתהליך).
+- יש להרחיב בהמשך: לוג ביקורת מלא, אישור ידני לפעולות הרסניות, ואם צריך בידוד חזק יותר — להעביר את `shell_exec` לבידוד קונטיינר נפרד בסביבה שמאפשרת זאת (לא Render).
 
 זהו שלד בסיסי לעבודה - לא מוכן לייצור כמו שהוא.

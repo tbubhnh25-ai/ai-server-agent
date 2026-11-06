@@ -15,10 +15,10 @@ TOOLS = {
 
 TOOL_DESCRIPTIONS = """
 כלים זמינים:
-- shell_exec(command): הרצת פקודת shell בתוך sandbox מבודד
+- shell_exec(command): הרצת פקודת shell מוגבלת זמן/זיכרון בתוך תיקיית ה-workspace
 - fs_read(path): קריאת קובץ מתיקיית ה-workspace
 - fs_write(path, content): כתיבת קובץ לתיקיית ה-workspace
 - http_fetch(url): הבאת תוכן עמוד אינטרנט (http/https ציבורי בלבד)
 - web_search(query): חיפוש חינמי ברשת (DuckDuckGo)
-- package_install(manager, package): התקנת חבילה (apt-get/pip/npm)
+- package_install(manager, package): התקנת חבילה (pip/npm)
 """

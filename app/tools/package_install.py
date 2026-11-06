@@ -1,6 +1,8 @@
-from app.sandbox.docker_runner import run_shell
+from app.sandbox.subprocess_runner import run_shell
 
-ALLOWED_MANAGERS = {"apt-get", "pip", "pip3", "npm"}
+# apt-get הוסר: בלי קונטיינר sandbox נפרד, פקודה זו תרוץ בתוך תהליך השירות עצמו
+# (דורש הרשאות root שלרוב אין לו ב-Render, ומשנה את הסביבה הפעילה עצמה).
+ALLOWED_MANAGERS = {"pip", "pip3", "npm"}
 
 
 def package_install(manager: str, package: str) -> tuple[bool, str]:
@@ -8,7 +10,6 @@ def package_install(manager: str, package: str) -> tuple[bool, str]:
         return False, f"מנהל חבילות '{manager}' לא מאושר"
 
     commands = {
-        "apt-get": f"apt-get update && apt-get install -y {package}",
         "pip": f"pip install --no-cache-dir {package}",
         "pip3": f"pip3 install --no-cache-dir {package}",
         "npm": f"npm install -g {package}",
