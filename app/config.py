@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     llm_api_key: str = ""
 
     workspace_dir: str = "/app/workspace"
+    audit_log_path: str = "/app/workspace/audit.log"
 
     max_loop_iterations: int = 15
     shell_timeout_seconds: int = 60
