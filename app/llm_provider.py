@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 import httpx
 
+from app import settings_store
 from app.config import settings
 
 
@@ -18,8 +19,8 @@ class GroqProvider(LLMProvider):
         async with httpx.AsyncClient(timeout=60) as client:
             resp = await client.post(
                 "https://api.groq.com/openai/v1/chat/completions",
-                headers={"Authorization": f"Bearer {settings.llm_api_key}"},
-                json={"model": settings.llm_model, "messages": messages},
+                headers={"Authorization": f"Bearer {settings_store.get('llm_api_key')}"},
+                json={"model": settings_store.get("llm_model"), "messages": messages},
             )
             resp.raise_for_status()
             return resp.json()["choices"][0]["message"]["content"]
@@ -44,8 +45,8 @@ class GeminiProvider(LLMProvider):
         system_instruction, contents = self._to_gemini_contents(messages)
         async with httpx.AsyncClient(timeout=60) as client:
             resp = await client.post(
-                f"https://generativelanguage.googleapis.com/v1beta/models/{settings.llm_model}:generateContent",
-                params={"key": settings.llm_api_key},
+                f"https://generativelanguage.googleapis.com/v1beta/models/{settings_store.get('llm_model')}:generateContent",
+                params={"key": settings_store.get("llm_api_key")},
                 json={
                     "contents": contents,
                     "systemInstruction": {"parts": [{"text": system_instruction}]},
@@ -57,8 +58,9 @@ class GeminiProvider(LLMProvider):
 
 
 def get_provider() -> LLMProvider:
-    if settings.llm_provider == "groq":
+    provider = settings_store.get("llm_provider")
+    if provider == "groq":
         return GroqProvider()
-    if settings.llm_provider == "gemini":
+    if provider == "gemini":
         return GeminiProvider()
-    raise ValueError(f"Unknown LLM provider: {settings.llm_provider}")
+    raise ValueError(f"Unknown LLM provider: {provider}")

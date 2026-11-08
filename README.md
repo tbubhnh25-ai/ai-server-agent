@@ -23,6 +23,10 @@
 2. הגדרת משתני הסביבה מ-`.env.example` בלשונית Environment של השירות (`AGENT_AUTH_TOKEN`, `LLM_PROVIDER`, `LLM_MODEL`, `LLM_API_KEY`).
 3. Deploy. Render מזריק את `PORT` בעצמו — אין צורך להגדיר אותו.
 
+## עדכון מפתח ה-LLM בלי Render
+
+דף `/settings` (בדפדפן, בכתובת השירות עצמה או דרך ה-Worker) מאפשר לעדכן את `LLM_API_KEY`/`LLM_PROVIDER`/`LLM_MODEL` בזמן ריצה, בלי להיכנס ל-Render ובלי Redeploy - צריך את ה-`AGENT_AUTH_TOKEN` כדי לשמור. השינוי נשמר לקובץ `runtime_settings.json` בתוך `WORKSPACE_DIR` וגובר על משתני הסביבה; **בלי דיסק קבוע (Persistent Disk) ב-Render הוא עלול להימחק בדיפלוי הבא** - למשתנה קבוע יש עדיין להשתמש במשתני הסביבה של Render.
+
 ## גישה דרך Cloudflare Worker (פרוקסי)
 
 אם הגישה הישירה לכתובת ה-Render חסומה (למשל ע"י סינון רשת/ISP), אפשר לגשת לסוכן דרך Worker של Cloudflare שמשמש פרוקסי הפוך:
