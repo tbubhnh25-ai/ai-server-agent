@@ -23,6 +23,14 @@
 2. הגדרת משתני הסביבה מ-`.env.example` בלשונית Environment של השירות (`AGENT_AUTH_TOKEN`, `LLM_PROVIDER`, `LLM_MODEL`, `LLM_API_KEY`).
 3. Deploy. Render מזריק את `PORT` בעצמו — אין צורך להגדיר אותו.
 
+## גישה דרך Cloudflare Worker (פרוקסי)
+
+אם הגישה הישירה לכתובת ה-Render חסומה (למשל ע"י סינון רשת/ISP), אפשר לגשת לסוכן דרך Worker של Cloudflare שמשמש פרוקסי הפוך:
+
+1. כניסה ל-[dash.cloudflare.com](https://dash.cloudflare.com) -> Workers & Pages -> Create -> Create Worker.
+2. עריכת הקוד (Edit code) והדבקת התוכן של `cloudflare-worker/worker.js` (עדכון `ORIGIN` לכתובת שירות ה-Render שלכם אם שונה).
+3. Deploy. כעת אפשר לשלוח בקשות ל-`https://<worker-name>.<account>.workers.dev/task` במקום ישירות ל-Render - ה-Worker מעביר הלאה את כל ה-headers (כולל Authorization) וה-body.
+
 ## מבנה הפרויקט
 
 ```
