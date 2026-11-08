@@ -11,6 +11,57 @@ from app.settings_store import set_values
 
 app = FastAPI(title="Autonomous Server Agent")
 
+CHAT_PAGE = """<!doctype html>
+<html lang="he" dir="rtl">
+<head><meta charset="utf-8"><title>צ'אט עם הסוכן</title></head>
+<body style="font-family: sans-serif; max-width: 640px; margin: 40px auto;">
+<h2>צ'אט עם הסוכן</h2>
+<label>טוקן אימות (AGENT_AUTH_TOKEN)<br>
+  <input type="password" id="token" style="width:100%"></label><br><br>
+<label>משימה / שאלה<br>
+  <textarea id="goal" rows="3" style="width:100%"></textarea></label><br><br>
+<button onclick="send()">שליחה</button>
+<a href="/settings" style="margin-right:12px">הגדרות</a>
+<p id="status"></p>
+<div id="output" style="white-space:pre-wrap; background:#f5f5f5; padding:12px; border-radius:6px; margin-top:16px;"></div>
+<script>
+  const tokenInput = document.getElementById("token");
+  tokenInput.value = localStorage.getItem("agent_token") || "";
+  async function send() {
+    const token = tokenInput.value;
+    localStorage.setItem("agent_token", token);
+    const goal = document.getElementById("goal").value;
+    const status = document.getElementById("status");
+    const output = document.getElementById("output");
+    status.textContent = "שולח...";
+    output.textContent = "";
+    try {
+      const resp = await fetch("/task", {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer " + token,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ goal: goal }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) {
+        status.textContent = "שגיאה: " + resp.status;
+        output.textContent = JSON.stringify(data, null, 2);
+        return;
+      }
+      status.textContent = "התקבלה תשובה";
+      const lines = (data.steps || []).map((s) => "[" + s.type + "] " + s.content);
+      lines.push("");
+      lines.push("תשובה סופית: " + data.final_answer);
+      output.textContent = lines.join("\\n");
+    } catch (err) {
+      status.textContent = "שגיאת רשת: " + err;
+    }
+  }
+</script>
+</body></html>"""
+
 SETTINGS_PAGE = """<!doctype html>
 <html lang="he" dir="rtl">
 <head><meta charset="utf-8"><title>הגדרות סוכן</title></head>
@@ -31,6 +82,7 @@ SETTINGS_PAGE = """<!doctype html>
     <select name="llm_model" id="model" style="width:100%"></select></label><br><br>
   <button type="submit">שמירה</button>
 </form>
+<a href="/">חזרה לצ'אט</a>
 {message}
 <script>
   const MODELS = {{
@@ -60,6 +112,11 @@ SETTINGS_PAGE = """<!doctype html>
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok"}
+
+
+@app.get("/", response_class=HTMLResponse)
+def chat_page() -> str:
+    return CHAT_PAGE
 
 
 @app.get("/settings", response_class=HTMLResponse)
