@@ -22,12 +22,38 @@ SETTINGS_PAGE = """<!doctype html>
   <label>LLM_API_KEY<br>
     <input type="password" name="llm_api_key" style="width:100%"></label><br><br>
   <label>LLM_PROVIDER<br>
-    <input type="text" name="llm_provider" placeholder="groq / gemini" style="width:100%"></label><br><br>
+    <select name="llm_provider" id="provider" style="width:100%" onchange="updateModels()">
+      <option value="">(ללא שינוי)</option>
+      <option value="groq">groq</option>
+      <option value="gemini">gemini</option>
+    </select></label><br><br>
   <label>LLM_MODEL<br>
-    <input type="text" name="llm_model" style="width:100%"></label><br><br>
+    <select name="llm_model" id="model" style="width:100%"></select></label><br><br>
   <button type="submit">שמירה</button>
 </form>
 {message}
+<script>
+  const MODELS = {{
+    groq: ["llama-3.1-8b-instant", "llama-3.3-70b-versatile", "gemma2-9b-it"],
+    gemini: ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash"],
+  }};
+  function updateModels() {{
+    const provider = document.getElementById("provider").value;
+    const modelSelect = document.getElementById("model");
+    modelSelect.innerHTML = "";
+    const noChange = document.createElement("option");
+    noChange.value = "";
+    noChange.textContent = "(ללא שינוי)";
+    modelSelect.appendChild(noChange);
+    (MODELS[provider] || []).forEach((m) => {{
+      const opt = document.createElement("option");
+      opt.value = m;
+      opt.textContent = m;
+      modelSelect.appendChild(opt);
+    }});
+  }}
+  updateModels();
+</script>
 </body></html>"""
 
 
